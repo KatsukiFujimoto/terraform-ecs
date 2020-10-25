@@ -1,0 +1,90 @@
+[
+    {
+        "name": "${env}-${project}-app",
+        "image": "${app_repository_url}:latest",
+        "portMappings": [
+            {
+                "containerPort": 3000,
+                "protocol": "tcp"
+            }
+        ],
+        "essential": true,
+        "workingDirectory": "/app",
+        "entryPoint": [
+            "sh",
+            "-c"
+        ],
+        "command": [
+            "bundle exec rails db:create db:migrate assets:precompile ; bundle exec pumactl start"
+        ],
+        "environment": [
+            {
+                "name": "RAILS_LOG_TO_STDOUT",
+                "value": "true"
+            },
+            {
+                "name": "RAILS_ENV",
+                "value": "production"
+            },
+            {
+                "name": "RAILS_SERVE_STATIC_FILES",
+                "value": "true"
+            },
+            {
+                "name": "RAILS_MASTER_KEY",
+                "value": "${master_key}"
+            },
+            {
+                "name": "DATABASE_HOST",
+                "value": "${db_host}"
+            },
+            {
+                "name": "DATABASE_USERNAME",
+                "value": "${db_username}"
+            },
+            {
+                "name": "DATABASE_PASSWORD",
+                "value": "${db_password}"
+            }
+        ],
+        "mountPoints": [
+            {
+                "containerPath": "/app/tmp/sockets",
+                "sourceVolume": "sockets"
+            }
+        ],
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": "${log_group_name}",
+                "awslogs-region": "ap-northeast-1",
+                "awslogs-stream-prefix": "ecs"
+            }
+        }
+    },
+    {
+        "name": "${env}-${project}-webserver",
+        "image": "${webserver_repository_url}:latest",
+        "portMappings": [
+            {
+                "containerPort": 80,
+                "protocol": "tcp"
+            }
+        ],
+        "essential": true,
+        "mountPoints": [
+            {
+                "containerPath": "/app/tmp/sockets",
+                "sourceVolume": "sockets"
+            }
+        ],
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": "${log_group_name}",
+                "awslogs-region": "ap-northeast-1",
+                "awslogs-stream-prefix": "ecs"
+            }
+        }
+    }
+]
